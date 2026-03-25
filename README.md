@@ -1,1 +1,0 @@
-# Roleta-de-mapa-do-free-fire
