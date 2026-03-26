@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roleta de Armas - Free Fire</title>
+
+    <link rel="icon" type="image/png" href="assets/icons/favicon.png">
+    <link rel="manifest" href="manifest.json">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@500;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #0a0a0f;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at 20% 50%, rgba(255, 80, 0, 0.12) 0%, transparent 60%), radial-gradient(ellipse at 80% 50%, rgba(255, 200, 0, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 8px 16px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #ff6a00;
+            border-radius: 4px;
+            text-decoration: none;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 120, 0, 0.3);
+            transform: scale(1.05);
+        }
+
+        .title-wrap {
+            text-align: center;
+            margin-bottom: 28px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .title-wrap h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2rem, 6vw, 3.8rem);
+            color: #fff;
+            letter-spacing: 4px;
+            text-shadow: 0 0 30px rgba(255, 120, 0, 0.8);
+        }
+
+        .title-wrap h1 span {
+            color: #ff6a00;
+        }
+
+        .title-wrap p {
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 0.9rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: min(380px, 88vw);
+            height: min(380px, 88vw);
+            z-index: 10;
+        }
+
+        .wheel-outer-ring {
+            position: absolute;
+            inset: -14px;
+            border-radius: 50%;
+            background: conic-gradient(#ff6a00, #ffcc00, #ff6a00, #ffcc00, #ff6a00);
+            animation: ringRotate 8s linear infinite;
+            box-shadow: 0 0 30px rgba(255, 120, 0, 0.5);
+            z-index: 1;
+        }
+
+        @keyframes ringRotate {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* --- ANIMAÇÃO DE FOGO ATRÁS DA ROLETA --- */
+        .wheel-glow {
+            position: absolute;
+            inset: -15px;
+            border-radius: 50%;
+            background: #ff6a00;
+            filter: blur(25px);
+            opacity: 0.7;
+            animation: firePulse 1.2s infinite alternate;
+            z-index: 0;
+        }
+
+        @keyframes firePulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.6;
+                filter: blur(20px);
+            }
+
+            100% {
+                transform: scale(1.08);
+                opacity: 1;
+                filter: blur(35px);
+                background: #ff2a00;
+                box-shadow: 0 0 50px #ff2a00;
+            }
+        }
+
+        canvas#wheel {
+            position: relative;
+            z-index: 5;
+            border-radius: 50%;
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .pointer {
+            position: absolute;
+            right: -22px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 18px solid transparent;
+            border-bottom: 18px solid transparent;
+            border-right: 36px solid #ff6a00;
+            filter: drop-shadow(0 0 10px rgba(255, 100, 0, 0.9));
+            z-index: 20;
+        }
+
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #fff 0%, #ffcc00 40%, #ff6a00 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 150, 0, 0.8);
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 3px solid #fff;
+        }
+
+        .spin-btn {
+            margin-top: 32px;
+            padding: 14px 52px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            color: #0a0a0f;
+            background: linear-gradient(135deg, #ffcc00 0%, #ff6a00 100%);
+            border: none;
+            cursor: pointer;
+            z-index: 10;
+            clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+            box-shadow: 0 4px 30px rgba(255, 120, 0, 0.5);
+        }
+
+        .spin-btn:disabled {
+            opacity: 0.5;
+        }
+
+        /* Modal de resultado */
+        .result-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(6px);
+        }
+
+        .result-overlay.show {
+            display: flex;
+        }
+
+        .result-card {
+            background: linear-gradient(145deg, #161616, #1e1206);
+            border: 1px solid rgba(255, 120, 0, 0.4);
+            border-radius: 12px;
+            padding: 44px 56px;
+            text-align: center;
+        }
+
+        .result-city {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3.5rem;
+            color: #fff;
+            margin: 10px 0;
+            letter-spacing: 2px;
+        }
+
+        .result-img-wrapper {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .result-img-wrapper img {
+            max-width: 100%;
+            max-height: 100px;
+            filter: drop-shadow(0 0 15px rgba(255, 120, 0, 0.6));
+            animation: floatWeapon 2s ease-in-out infinite;
+        }
+
+        @keyframes floatWeapon {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1.1);
+            }
+
+            50% {
+                transform: translateY(-10px) scale(1.1);
+            }
+        }
+
+        .close-btn {
+            margin-top: 10px;
+            padding: 10px 30px;
+            background: transparent;
+            border: 1px solid #ff6a00;
+            color: #ff6a00;
+            cursor: pointer;
+            font-family: 'Bebas Neue', sans-serif;
+            width: 100%;
+        }
+
+        /* --- BOTÃO DE COMPARTILHAR --- */
+        .share-btn {
+            padding: 10px 36px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            background: #25d366;
+            border: none;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: filter 0.2s;
+            width: 100%;
+            box-shadow: 0 0 15px rgba(37, 211, 102, 0.4);
+        }
+
+        .share-btn:hover {
+            filter: brightness(1.1);
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="index.html" class="back-btn">⬅️ MENU</a>
+
+    <div class="title-wrap">
+        <h1>ROLETA DE <span>ARMAS</span></h1>
+        <p>Qual será a sua arma no combate?</p>
+    </div>
+
+    <div class="wheel-container">
+        <div class="wheel-outer-ring"></div>
+        <div class="wheel-glow"></div> <canvas id="wheel"></canvas>
+        <div class="pointer"></div>
+        <div class="wheel-center" onclick="spin()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#1a0a00">
+                <path
+                    d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+            </svg>
+        </div>
+    </div>
+
+    <button class="spin-btn" id="spinBtn" onclick="spin()">GIRAR ROLETA</button>
+
+    <div class="result-overlay" id="resultOverlay">
+        <div class="result-card">
+            <div
+                style="color: #ffcc00; letter-spacing: 5px; font-weight: bold; font-size: 0.9rem; margin-bottom: 15px;">
+                🔫 SUA ARMA É</div>
+
+            <div class="result-img-wrapper">
+                <img id="resultImage" src="" alt="Arma">
+            </div>
+
+            <div class="result-city" id="resultName">—</div>
+            <div style="color: rgba(255,255,255,0.4); letter-spacing: 2px; font-size: 0.85rem; margin-bottom: 20px;">SÓ
+                VALE DAR CAPA!</div>
+
+            <button class="share-btn" onclick="shareResult()">COMPARTILHAR NO WHATSAPP 📱</button>
+            <button class="close-btn" onclick="closeResult()">SORTEAR DE NOVO</button>
+        </div>
+    </div>
+
+    <audio id="tickSound" src="https://actions.google.com/sounds/v1/ui/pop_click.ogg" preload="auto"></audio>
+    <audio id="winSound" src="assets/musica-lobby/ComeceOsJogos.mp3"></audio>
+
+    <script>
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+
+        const guns = [
+            { name: "AK", img: "assets/guns/AK.png", color: "#d62828" },
+            { name: "AN94", img: "assets/guns/AN94 (2).png", color: "#f5c842" },
+            { name: "AWM", img: "assets/guns/AWM.png", color: "#2ecc40" },
+            { name: "FAMAS", img: "assets/guns/famas.png", color: "#e07020" },
+            { name: "GROZA", img: "assets/guns/GROZA.png", color: "#7b3fa0" },
+            { name: "M4A1", img: "assets/guns/M4A1.png", color: "#3a9ad9" },
+            { name: "M14", img: "assets/guns/M14 (1).png", color: "#d0d0d8" },
+            { name: "P90", img: "assets/guns/p90 (1).png", color: "#ff6a00" },
+            { name: "SCAR", img: "assets/guns/SCAR.png", color: "#16a085" },
+            { name: "SKS", img: "assets/guns/SKS.png", color: "#8e44ad" }
+        ];
+
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const NUM = guns.length;
+        const ARC = (2 * Math.PI) / NUM;
+        const tickAudio = document.getElementById('tickSound');
+        const winAudio = document.getElementById('winSound');
+
+        let currentAngle = 0;
+        let spinning = false;
+
+        function playTick() {
+            tickAudio.currentTime = 0;
+            tickAudio.volume = 0.5;
+            tickAudio.play().catch(e => { });
+        }
+
+        let loadedImages = 0;
+        guns.forEach(gun => {
+            const imgObj = new Image();
+            imgObj.src = gun.img;
+            imgObj.onload = () => {
+                loadedImages++;
+                if (loadedImages === NUM) setSize();
+            };
+            gun.imageElement = imgObj;
+        });
+
+        function setSize() {
+            const s = Math.min(380, window.innerWidth * 0.88);
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = s * dpr;
+            canvas.height = s * dpr;
+            canvas.style.width = s + 'px';
+            canvas.style.height = s + 'px';
+            ctx.scale(dpr, dpr);
+            drawWheel(currentAngle);
+        }
+
+        function drawWheel(angle) {
+            const cx = canvas.width / (2 * (window.devicePixelRatio || 1));
+            const r = cx - 5;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < NUM; i++) {
+                const start = angle + i * ARC;
+                const end = start + ARC;
+                const gun = guns[i];
+
+                ctx.beginPath();
+                ctx.moveTo(cx, cx);
+                ctx.arc(cx, cx, r, start, end);
+                ctx.fillStyle = gun.color;
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(cx, cx);
+                ctx.rotate(start + ARC / 2);
+
+                ctx.textAlign = 'right';
+                ctx.fillStyle = '#fff';
+                ctx.font = "bold 18px 'Bebas Neue'";
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 3;
+                ctx.strokeText(gun.name, r * 0.9, 6);
+                ctx.fillText(gun.name, r * 0.9, 6);
+
+                if (gun.imageElement && gun.imageElement.complete) {
+                    const imgWidth = r * 0.45;
+                    const imgHeight = (gun.imageElement.height / gun.imageElement.width) * imgWidth;
+                    ctx.drawImage(gun.imageElement, r * 0.35, -imgHeight / 2, imgWidth, imgHeight);
+                }
+                ctx.restore();
+            }
+        }
+
+        function spin() {
+            if (spinning || loadedImages < NUM) return;
+            spinning = true;
+            document.getElementById('spinBtn').disabled = true;
+
+            let lastSlice = Math.floor(Math.abs(currentAngle) / ARC);
+
+            const winner = Math.floor(Math.random() * NUM);
+            const extraSpins = 15;
+            const target = -(winner * ARC + ARC / 2);
+
+            let diff = (target - (currentAngle % (2 * Math.PI))) % (2 * Math.PI);
+            if (diff <= 0) diff += 2 * Math.PI;
+
+            const totalRotation = extraSpins * 2 * Math.PI + diff;
+            const duration = 9000;
+            const start = performance.now();
+            const startAng = currentAngle;
+
+            function frame(now) {
+                const t = Math.min((now - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - t, 5);
+                currentAngle = startAng + totalRotation * eased;
+
+                // Toca tic-tic
+                const currentSlice = Math.floor(Math.abs(currentAngle) / ARC);
+                if (currentSlice !== lastSlice) {
+                    playTick();
+                    lastSlice = currentSlice;
+                }
+
+                drawWheel(currentAngle);
+
+                if (t < 1) requestAnimationFrame(frame);
+                else {
+                    spinning = false;
+                    document.getElementById('spinBtn').disabled = false;
+
+                    document.getElementById('resultName').textContent = guns[winner].name;
+                    document.getElementById('resultName').style.color = guns[winner].color;
+                    document.getElementById('resultName').style.textShadow = `0 0 30px ${guns[winner].color}`;
+                    document.getElementById('resultImage').src = guns[winner].img;
+
+                    // Toca a frase de vitória!
+                    winAudio.currentTime = 0;
+                    winAudio.play().catch(e => { });
+
+                    document.getElementById('resultOverlay').classList.add('show');
+                }
+            }
+            requestAnimationFrame(frame);
+        }
+
+        // --- FUNÇÃO PARA COMPARTILHAR NO WHATSAPP ---
+        function shareResult() {
+            const name = document.getElementById('resultName').textContent;
+            const text = `🔫 Acabei de sortear minha arma no Free Fire: *${name}*! Vem sortear a tua também: ${window.location.href}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        function closeResult() { document.getElementById('resultOverlay').classList.remove('show'); }
+        window.addEventListener('resize', setSize);
+    </script>
+</body>
+
+</html>

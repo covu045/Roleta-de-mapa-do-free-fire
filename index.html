@@ -1,590 +1,421 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Roleta Free Fire</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@500;700&display=swap');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu - Roletas Free Fire</title>
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+    <link rel="icon" type="image/png" href="assets/icons/favicon.png">
+    <link rel="manifest" href="manifest.json">
 
-  body {
-    min-height: 100vh;
-    background: #0a0a0f;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Rajdhani', sans-serif;
-    overflow: hidden;
-    position: relative;
-  }
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@500;700&display=swap');
 
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(ellipse at 20% 50%, rgba(255,80,0,0.12) 0%, transparent 60%),
-      radial-gradient(ellipse at 80% 50%, rgba(255,200,0,0.08) 0%, transparent 60%);
-    pointer-events: none;
-  }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  /* Partículas de fundo */
-  .particle {
-    position: fixed;
-    width: 2px;
-    height: 2px;
-    background: rgba(255,150,0,0.4);
-    border-radius: 50%;
-    animation: float linear infinite;
-    pointer-events: none;
-  }
+        body {
+            min-height: 100vh;
+            background: #0a0a0f;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            position: relative;
+            padding: 20px;
+        }
 
-  @keyframes float {
-    from { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    to { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
-  }
+        /* Fundo com gradiente e luzes */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(255, 80, 0, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(255, 200, 0, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
 
-  .title-wrap {
-    text-align: center;
-    margin-bottom: 28px;
-    position: relative;
-    z-index: 10;
-  }
+        /* Partículas de fundo */
+        .particle {
+            position: fixed;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 150, 0, 0.4);
+            border-radius: 50%;
+            animation: float linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
 
-  .title-wrap h1 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(2rem, 6vw, 3.8rem);
-    color: #fff;
-    letter-spacing: 4px;
-    line-height: 1;
-    text-shadow: 0 0 30px rgba(255,120,0,0.8), 0 0 60px rgba(255,80,0,0.4);
-  }
+        @keyframes float {
+            from {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
 
-  .title-wrap h1 span {
-    color: #ff6a00;
-  }
+            10% {
+                opacity: 1;
+            }
 
-  .title-wrap p {
-    color: rgba(255,255,255,0.45);
-    font-size: 0.9rem;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    margin-top: 4px;
-  }
+            90% {
+                opacity: 1;
+            }
 
-  .wheel-container {
-    position: relative;
-    width: min(380px, 88vw);
-    height: min(380px, 88vw);
-    z-index: 10;
-  }
+            to {
+                transform: translateY(-10vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
 
-  /* Anel externo decorativo */
-  .wheel-outer-ring {
-    position: absolute;
-    inset: -14px;
-    border-radius: 50%;
-    background: conic-gradient(
-      #ff6a00, #ffcc00, #ff6a00, #ffcc00, #ff6a00
-    );
-    animation: ringRotate 8s linear infinite;
-    box-shadow: 0 0 30px rgba(255,120,0,0.5), inset 0 0 20px rgba(0,0,0,0.5);
-    z-index: 1;
-  }
+        /* --- TELA DE CARREGAMENTO ESTILO FREE FIRE --- */
+        #preloader {
+            position: fixed;
+            inset: 0;
+            background: #0a0a0f;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
 
-  @keyframes ringRotate {
-    to { transform: rotate(360deg); }
-  }
+        .loading-logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            color: #fff;
+            margin-bottom: 20px;
+            letter-spacing: 5px;
+            text-shadow: 0 0 20px rgba(255, 106, 0, 0.8);
+        }
 
-  .wheel-outer-mask {
-    position: absolute;
-    inset: -4px;
-    border-radius: 50%;
-    background: #0a0a0f;
-    z-index: 2;
-  }
+        .loading-logo span {
+            color: #ff6a00;
+        }
 
-  .wheel-glow {
-    position: absolute;
-    inset: -2px;
-    border-radius: 50%;
-    box-shadow:
-      0 0 0 3px rgba(255,120,0,0.7),
-      0 0 20px rgba(255,90,0,0.5),
-      0 0 50px rgba(255,50,0,0.2);
-    z-index: 3;
-  }
+        .loading-bar-bg {
+            width: 250px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 106, 0, 0.3);
+        }
 
-  canvas#wheel {
-    position: relative;
-    z-index: 5;
-    border-radius: 50%;
-    display: block;
-    cursor: pointer;
-    transition: filter 0.3s;
-    width: 100%;
-    height: 100%;
-  }
+        .loading-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #ffcc00, #ff6a00);
+            box-shadow: 0 0 15px #ff6a00;
+            animation: loadProgress 2.5s ease-in-out forwards;
+        }
 
-  canvas#wheel:hover {
-    filter: brightness(1.1) drop-shadow(0 0 20px rgba(255,120,0,0.6));
-  }
+        @keyframes loadProgress {
+            to {
+                width: 100%;
+            }
+        }
 
-  /* Ponteiro */
-  .pointer {
-    position: absolute;
-    right: -22px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 0;
-    height: 0;
-    border-top: 18px solid transparent;
-    border-bottom: 18px solid transparent;
-    border-right: 36px solid #ff6a00;
-    filter: drop-shadow(0 0 10px rgba(255,100,0,0.9));
-    z-index: 20;
-  }
+        /* Esconde o menu até carregar */
+        #main-content {
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
 
-  .pointer::after {
-    content: '';
-    position: absolute;
-    right: -36px;
-    top: -10px;
-    width: 0;
-    height: 0;
-    border-top: 10px solid transparent;
-    border-bottom: 10px solid transparent;
-    border-right: 20px solid rgba(255,200,100,0.3);
-  }
+        /* Botão de Som */
+        .sound-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #ff6a00;
+            color: #fff;
+            font-size: 1.5rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(255, 120, 0, 0.3);
+        }
 
-  /* Centro da roda */
-  .wheel-center {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 60px;
-    height: 60px;
-    background: radial-gradient(circle, #fff 0%, #ffcc00 40%, #ff6a00 100%);
-    border-radius: 50%;
-    box-shadow: 0 0 20px rgba(255,150,0,0.8), 0 0 40px rgba(255,80,0,0.4);
-    z-index: 30;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    border: 3px solid #fff;
-    transition: transform 0.15s;
-  }
+        .sound-btn:hover {
+            background: rgba(255, 120, 0, 0.3);
+            transform: scale(1.1);
+        }
 
-  .wheel-center:active { transform: translate(-50%, -50%) scale(0.92); }
+        /* Cabeçalho do Menu */
+        .title-wrap {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 10;
+            animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
 
-  .wheel-center svg {
-    width: 22px;
-    height: 22px;
-    fill: #1a0a00;
-  }
+        .title-wrap h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(3rem, 8vw, 5rem);
+            color: #fff;
+            letter-spacing: 4px;
+            line-height: 1;
+            text-shadow: 0 0 30px rgba(255, 120, 0, 0.8), 0 0 60px rgba(255, 80, 0, 0.4);
+        }
 
-  /* Botão */
-  .spin-btn {
-    margin-top: 32px;
-    padding: 14px 52px;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.5rem;
-    letter-spacing: 4px;
-    color: #0a0a0f;
-    background: linear-gradient(135deg, #ffcc00 0%, #ff6a00 100%);
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    position: relative;
-    z-index: 10;
-    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
-    box-shadow: 0 4px 30px rgba(255,120,0,0.5);
-    transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
-  }
+        .title-wrap h1 span {
+            color: #ffcc00;
+        }
 
-  .spin-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 40px rgba(255,120,0,0.7);
-    filter: brightness(1.1);
-  }
+        .title-wrap p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 10px;
+            font-weight: bold;
+        }
 
-  .spin-btn:active { transform: translateY(1px); }
-  .spin-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-  }
+        /* Container dos Cartões */
+        .menu-container {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 1000px;
+        }
 
-  /* Modal de resultado */
-  .result-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(6px);
-  }
+        .menu-card {
+            background: linear-gradient(145deg, #161616, #1e1206);
+            border: 2px solid rgba(255, 120, 0, 0.3);
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            text-decoration: none;
+            width: 280px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), inset 0 0 0 rgba(255, 120, 0, 0);
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.6s ease forwards;
+            opacity: 0;
+            transform: translateY(30px);
+        }
 
-  .result-overlay.show { display: flex; }
+        .menu-card:nth-child(1) {
+            animation-delay: 0.2s;
+        }
 
-  .result-card {
-    background: linear-gradient(145deg, #161616, #1e1206);
-    border: 1px solid rgba(255,120,0,0.4);
-    border-radius: 12px;
-    padding: 44px 56px;
-    text-align: center;
-    box-shadow: 0 0 60px rgba(255,80,0,0.3), 0 0 120px rgba(255,80,0,0.1);
-    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    max-width: 90vw;
-  }
+        .menu-card:nth-child(2) {
+            animation-delay: 0.4s;
+        }
 
-  @keyframes popIn {
-    from { transform: scale(0.5); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-  }
+        .menu-card:nth-child(3) {
+            animation-delay: 0.6s;
+        }
 
-  .result-label {
-    font-size: 0.8rem;
-    letter-spacing: 5px;
-    color: rgba(255,200,100,0.6);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-  .result-emoji {
-    font-size: 3rem;
-    margin-bottom: 10px;
-    animation: bounce 0.6s ease infinite alternate;
-  }
+        @keyframes popIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
 
-  @keyframes bounce {
-    from { transform: translateY(0); }
-    to { transform: translateY(-8px); }
-  }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
 
-  .result-city {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(2.4rem, 8vw, 4rem);
-    color: #fff;
-    letter-spacing: 3px;
-    text-shadow: 0 0 30px currentColor;
-    margin-bottom: 6px;
-  }
+        .menu-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            border-color: #ff6a00;
+            box-shadow: 0 15px 40px rgba(255, 120, 0, 0.4), inset 0 0 20px rgba(255, 120, 0, 0.2);
+        }
 
-  .result-sub {
-    color: rgba(255,255,255,0.4);
-    font-size: 0.85rem;
-    letter-spacing: 2px;
-    margin-bottom: 28px;
-  }
+        .card-emoji {
+            font-size: 4.5rem;
+            margin-bottom: 15px;
+            transition: transform 0.3s ease;
+        }
 
-  .close-btn {
-    padding: 10px 36px;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.1rem;
-    letter-spacing: 3px;
-    background: transparent;
-    border: 1px solid rgba(255,120,0,0.5);
-    color: #ff9640;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-  }
+        .menu-card:hover .card-emoji {
+            transform: scale(1.2) rotate(5deg);
+        }
 
-  .close-btn:hover {
-    background: rgba(255,120,0,0.15);
-    color: #fff;
-  }
+        .card-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.2rem;
+            color: #fff;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
 
-  /* Confetti */
-  .confetti-piece {
-    position: fixed;
-    width: 8px;
-    height: 8px;
-    top: -10px;
-    animation: confettiFall linear forwards;
-    border-radius: 1px;
-    pointer-events: none;
-    z-index: 200;
-  }
+        .card-desc {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+            margin-bottom: 25px;
+        }
 
-  @keyframes confettiFall {
-    to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-  }
-</style>
+        .card-btn {
+            display: inline-block;
+            padding: 10px 30px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            color: #0a0a0f;
+            background: linear-gradient(135deg, #ffcc00 0%, #ff6a00 100%);
+            border-radius: 4px;
+            clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+            transition: all 0.3s;
+        }
+
+        .menu-card:hover .card-btn {
+            box-shadow: 0 0 20px rgba(255, 120, 0, 0.8);
+            filter: brightness(1.2);
+        }
+
+        .booyah {
+            position: absolute;
+            bottom: 20px;
+            font-family: 'Bebas Neue', sans-serif;
+            color: rgba(255, 200, 0, 0.2);
+            font-size: 2rem;
+            letter-spacing: 10px;
+            z-index: 1;
+            pointer-events: none;
+        }
+    </style>
 </head>
+
 <body>
 
-<div class="title-wrap">
-  <h1>ROLETA <span>FREE FIRE</span></h1>
-  <p>Escolha seu destino no campo de batalha</p>
-</div>
+    <div id="preloader">
+        <div class="loading-logo">FREE FIRE <span>ROLETA</span></div>
+        <div class="loading-bar-bg">
+            <div class="loading-bar-fill"></div>
+        </div>
+        <p style="color: #ff6a00; margin-top: 15px; letter-spacing: 3px; font-family: 'Bebas Neue'; font-size: 1.2rem;">
+            CARREGANDO ASSETS...</p>
+    </div>
 
-<div class="wheel-container">
-  <div class="wheel-outer-ring"></div>
-  <div class="wheel-outer-mask"></div>
-  <div class="wheel-glow"></div>
-  <canvas id="wheel"></canvas>
-  <div class="pointer"></div>
-  <div class="wheel-center" onclick="spin()">
-    <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-  </div>
-</div>
+    <div id="main-content">
+        <audio id="bgMusic" src="assets/musica-lobby/FreeFireLobby.mp3" loop></audio>
 
-<button class="spin-btn" id="spinBtn" onclick="spin()">GIRAR ROLETA</button>
+        <button class="sound-btn" id="soundBtn" onclick="toggleMusic()">🔇</button>
 
-<div class="result-overlay" id="resultOverlay">
-  <div class="result-card" id="resultCard">
-    <div class="result-label">🗺️ Você vai jogar em</div>
-    <div class="result-emoji" id="resultEmoji">🔥</div>
-    <div class="result-city" id="resultCity">—</div>
-    <div class="result-sub">BOA SORTE, SOLDADO!</div>
-    <button class="close-btn" onclick="closeResult()">JOGAR NOVAMENTE</button>
-  </div>
-</div>
+        <div class="title-wrap">
+            <h1>SALA DE <span>ESPERA</span></h1>
+            <p>Escolha qual roleta quer girar hoje!</p>
+        </div>
 
-<script>
-const cities = [
-  { name: "Riverside",      color: "#f5c842", textColor: "#fff" },
-  { name: "Plantation",     color: "#7b3fa0", textColor: "#fff" },
-  { name: "Bullseye",       color: "#2ecc40", textColor: "#fff" },
-  { name: "Rim Nam",        color: "#e07020", textColor: "#fff" },
-  { name: "Kota Tua",       color: "#d62828", textColor: "#fff" },
-  { name: "Katulistiwa",    color: "#3a9ad9", textColor: "#fff" },
-  { name: "Factory",        color: "#d0d0d8", textColor: "#fff" },
-];
+        <div class="menu-container">
+            <a href="mapas.html" class="menu-card">
+                <div class="card-emoji">🗺️</div>
+                <div class="card-title">MAPAS</div>
+                <div class="card-desc">Sorteie em qual cidade você vai cair na próxima partida.</div>
+                <div class="card-btn">ENTRAR</div>
+            </a>
 
-const emojis = {
-  "Riverside": "🌊",
-  "Plantation": "🌿",
-  "Bullseye": "🎯",
-  "Rim Nam": "🏯",
-  "Kota Tua": "🏛️",
-  "Katulistiwa": "⚡",
-  "Factory": "🏭",
-};
+            <a href="armas.html" class="menu-card">
+                <div class="card-emoji">🔫</div>
+                <div class="card-title">ARMAS</div>
+                <div class="card-desc">Descubra qual arma você é obrigado a usar até o final.</div>
+                <div class="card-btn">ENTRAR</div>
+            </a>
 
-const canvas = document.getElementById('wheel');
-const ctx = canvas.getContext('2d');
-const NUM = cities.length;
-const ARC = (2 * Math.PI) / NUM;
+            <a href="cores.html" class="menu-card">
+                <div class="card-emoji">🎨</div>
+                <div class="card-title">CORES</div>
+                <div class="card-desc">Sorteie uma cor e faça o desafio das cores no jogo!</div>
+                <div class="card-btn">ENTRAR</div>
+            </a>
+        </div>
 
-let currentAngle = 0;
-let spinning = false;
-let wheelSize = 0;
+        <div class="booyah">BOOYAH!</div>
+    </div>
 
-function setSize() {
-  wheelSize = Math.min(380, window.innerWidth * 0.88);
-  const dpr = window.devicePixelRatio || 1;
-  
-  canvas.width = wheelSize * dpr;
-  canvas.height = wheelSize * dpr;
-  canvas.style.width = wheelSize + 'px';
-  canvas.style.height = wheelSize + 'px';
-  
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.scale(dpr, dpr);
-}
+    <script>
+        // --- REGISTRO PWA ---
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW falhou:', err));
+        }
 
-function drawWheel(angle) {
-  const cx = wheelSize / 2;
-  const cy = wheelSize / 2;
-  const r = cx - 2;
+        // --- SISTEMA DE CARREGAMENTO ---
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('preloader').style.opacity = '0';
+                document.getElementById('main-content').style.opacity = '1';
+                setTimeout(() => {
+                    document.getElementById('preloader').style.display = 'none';
+                }, 500);
+            }, 2500); // Aguarda a animação da barra terminar
+        });
 
-  ctx.clearRect(0, 0, wheelSize, wheelSize);
+        // --- SISTEMA DE ÁUDIO ---
+        const bgMusic = document.getElementById('bgMusic');
+        const soundBtn = document.getElementById('soundBtn');
+        let isPlaying = false;
 
-  for (let i = 0; i < NUM; i++) {
-    const start = angle + i * ARC;
-    const end = start + ARC;
-    const city = cities[i];
+        function toggleMusic() {
+            if (isPlaying) {
+                bgMusic.pause();
+                soundBtn.textContent = '🔇';
+            } else {
+                bgMusic.volume = 0.4;
+                bgMusic.play();
+                soundBtn.textContent = '🔊';
+            }
+            isPlaying = !isPlaying;
+        }
 
-    // Fatia
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, start, end);
-    ctx.closePath();
-    ctx.fillStyle = city.color;
-    ctx.fill();
+        document.body.addEventListener('click', () => {
+            if (!isPlaying) toggleMusic();
+        }, { once: true });
 
-    // Borda da fatia
-    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
 
-    // Gradiente sutil
-    const grad = ctx.createRadialGradient(cx, cy, r * 0.2, cx, cy, r);
-    grad.addColorStop(0, 'rgba(255,255,255,0.18)');
-    grad.addColorStop(1, 'rgba(0,0,0,0.12)');
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, start, end);
-    ctx.closePath();
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // TEXTO
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(start + ARC / 2);
-    ctx.textAlign = 'right';
-    
-    const name = city.name;
-    const isLong = name.length > 10;
-    
-    ctx.font = `bold ${isLong ? Math.floor(r * 0.11) : Math.floor(r * 0.13)}px 'Bebas Neue', sans-serif`;
-    
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
-    ctx.fillStyle = city.textColor;
-    
-    ctx.shadowColor = 'rgba(0,0,0,0.8)';
-    ctx.shadowBlur = 6;
-
-    if (isLong && name.includes(' ')) {
-      const parts = name.split(' ');
-      const half = Math.ceil(parts.length / 2);
-      const line1 = parts.slice(0, half).join(' ');
-      const line2 = parts.slice(half).join(' ');
-      const lh = Math.floor(r * 0.1);
-      
-      ctx.strokeText(line1, r * 0.85, -lh * 0.4);
-      ctx.fillText(line1, r * 0.85, -lh * 0.4);
-      
-      ctx.strokeText(line2, r * 0.85, lh * 0.7);
-      ctx.fillText(line2, r * 0.85, lh * 0.7);
-    } else {
-      ctx.strokeText(name, r * 0.85, Math.floor(r * 0.04));
-      ctx.fillText(name, r * 0.85, Math.floor(r * 0.04));
-    }
-    ctx.restore();
-  }
-
-  // Centro
-  ctx.beginPath();
-  ctx.arc(cx, cy, 28, 0, 2 * Math.PI);
-  ctx.fillStyle = '#fff';
-  ctx.fill();
-  ctx.strokeStyle = '#ff6a00';
-  ctx.lineWidth = 3;
-  ctx.stroke();
-}
-
-function easeOut(t) {
-  return 1 - Math.pow(1 - t, 5); 
-}
-
-function spin() {
-  if (spinning) return;
-  spinning = true;
-  document.getElementById('spinBtn').disabled = true;
-
-  const winner = Math.floor(Math.random() * NUM);
-
-  const extraSpins = 12 + Math.floor(Math.random() * 6);
-  const targetAngle = -(winner * ARC + ARC / 2) + Math.random() * (ARC * 0.6) - ARC * 0.3;
-  
-  // FIX DA MATEMÁTICA: Aqui vemos onde a roleta está visualmente na volta atual
-  const visualCurrent = currentAngle % (2 * Math.PI);
-
-  // Calculamos quanto falta para chegar no alvo
-  let diff = (targetAngle - visualCurrent) % (2 * Math.PI);
-  
-  // Garantimos que a roda gira sempre para a frente (soma uma volta se o número for negativo)
-  if (diff <= 0) {
-    diff += 2 * Math.PI;
-  }
-
-  // A rotação total são as voltas extras completas + o restinho de ângulo que falta para parar no vencedor
-  const totalRotation = (extraSpins * 2 * Math.PI) + diff;
-
-  const duration = 7500 + Math.random() * 2000;
-  const startAngle = currentAngle;
-  const startTime = performance.now();
-
-  function frame(now) {
-    const elapsed = now - startTime;
-    const t = Math.min(elapsed / duration, 1);
-    const eased = easeOut(t);
-    
-    currentAngle = startAngle + totalRotation * eased;
-    drawWheel(currentAngle);
-
-    if (t < 1) {
-      requestAnimationFrame(frame);
-    } else {
-      currentAngle = startAngle + totalRotation;
-      drawWheel(currentAngle);
-      spinning = false;
-      document.getElementById('spinBtn').disabled = false;
-
-      setTimeout(() => showResult(winner), 500);
-    }
-  }
-
-  requestAnimationFrame(frame);
-}
-
-function showResult(idx) {
-  const city = cities[idx];
-  document.getElementById('resultCity').textContent = city.name;
-  document.getElementById('resultCity').style.color = city.color;
-  document.getElementById('resultCity').style.textShadow = `0 0 30px ${city.color}, 0 0 60px ${city.color}`;
-  document.getElementById('resultEmoji').textContent = emojis[city.name] || '🔥';
-  document.getElementById('resultOverlay').classList.add('show');
-  launchConfetti(city.color);
-}
-
-function closeResult() {
-  document.getElementById('resultOverlay').classList.remove('show');
-}
-
-document.getElementById('resultOverlay').addEventListener('click', function(e) {
-  if (e.target === this) closeResult();
-});
-
-function launchConfetti(color) {
-  const colors = [color, '#ff6a00', '#ffcc00', '#fff', '#ff4444'];
-  for (let i = 0; i < 60; i++) {
-    const piece = document.createElement('div');
-    piece.className = 'confetti-piece';
-    piece.style.left = Math.random() * 100 + 'vw';
-    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-    piece.style.animationDuration = (1.5 + Math.random() * 2) + 's';
-    piece.style.animationDelay = Math.random() * 0.8 + 's';
-    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
-    piece.style.width = (5 + Math.random() * 8) + 'px';
-    piece.style.height = (5 + Math.random() * 8) + 'px';
-    document.body.appendChild(piece);
-    piece.addEventListener('animationend', () => piece.remove());
-  }
-}
-
-function createParticles() {
-  for (let i = 0; i < 20; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.left = Math.random() * 100 + 'vw';
-    p.style.animationDuration = (8 + Math.random() * 12) + 's';
-    p.style.animationDelay = (Math.random() * 10) + 's';
-    p.style.width = p.style.height = (1 + Math.random() * 3) + 'px';
-    p.style.background = `rgba(255,${100 + Math.floor(Math.random()*100)},0,0.5)`;
-    document.body.appendChild(p);
-  }
-}
-
-window.addEventListener('resize', () => { setSize(); drawWheel(currentAngle); });
-setSize();
-drawWheel(currentAngle);
-createParticles();
-</script>
+        // --- PARTÍCULAS ---
+        function createParticles() {
+            for (let i = 0; i < 25; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = Math.random() * 100 + 'vw';
+                p.style.animationDuration = (5 + Math.random() * 10) + 's';
+                p.style.animationDelay = (Math.random() * 5) + 's';
+                p.style.width = p.style.height = (2 + Math.random() * 3) + 'px';
+                p.style.background = `rgba(255,${100 + Math.floor(Math.random() * 100)},0,${0.3 + Math.random() * 0.5})`;
+                document.body.appendChild(p);
+            }
+        }
+        createParticles();
+    </script>
 </body>
+
 </html>

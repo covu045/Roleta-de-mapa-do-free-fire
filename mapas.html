@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roleta Free Fire - Mapas</title>
+
+    <link rel="icon" type="image/png" href="assets/icons/favicon.png">
+    <link rel="manifest" href="manifest.json">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@500;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #0a0a0f;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at 20% 50%, rgba(255, 80, 0, 0.12) 0%, transparent 60%), radial-gradient(ellipse at 80% 50%, rgba(255, 200, 0, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .particle {
+            position: fixed;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 150, 0, 0.4);
+            border-radius: 50%;
+            animation: float linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            from {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            to {
+                transform: translateY(-10vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 8px 16px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #ff6a00;
+            border-radius: 4px;
+            text-decoration: none;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 120, 0, 0.3);
+            transform: scale(1.05);
+        }
+
+        .title-wrap {
+            text-align: center;
+            margin-bottom: 28px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .title-wrap h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2rem, 6vw, 3.8rem);
+            color: #fff;
+            letter-spacing: 4px;
+            line-height: 1;
+            text-shadow: 0 0 30px rgba(255, 120, 0, 0.8), 0 0 60px rgba(255, 80, 0, 0.4);
+        }
+
+        .title-wrap h1 span {
+            color: #ff6a00;
+        }
+
+        .title-wrap p {
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 0.9rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: min(380px, 88vw);
+            height: min(380px, 88vw);
+            z-index: 10;
+        }
+
+        /* Anel externo decorativo */
+        .wheel-outer-ring {
+            position: absolute;
+            inset: -14px;
+            border-radius: 50%;
+            background: conic-gradient(#ff6a00, #ffcc00, #ff6a00, #ffcc00, #ff6a00);
+            animation: ringRotate 8s linear infinite;
+            box-shadow: 0 0 30px rgba(255, 120, 0, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+
+        @keyframes ringRotate {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .wheel-outer-mask {
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: #0a0a0f;
+            z-index: 2;
+        }
+
+        /* --- ANIMAÇÃO DE FOGO ATRÁS DA ROLETA --- */
+        .wheel-glow {
+            position: absolute;
+            inset: -15px;
+            border-radius: 50%;
+            background: #ff6a00;
+            filter: blur(25px);
+            opacity: 0.7;
+            animation: firePulse 1.2s infinite alternate;
+            z-index: 0;
+        }
+
+        @keyframes firePulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.6;
+                filter: blur(20px);
+            }
+
+            100% {
+                transform: scale(1.08);
+                opacity: 1;
+                filter: blur(35px);
+                background: #ff2a00;
+                box-shadow: 0 0 50px #ff2a00;
+            }
+        }
+
+        canvas#wheel {
+            position: relative;
+            z-index: 5;
+            border-radius: 50%;
+            display: block;
+            cursor: pointer;
+            transition: filter 0.3s;
+            width: 100%;
+            height: 100%;
+        }
+
+        canvas#wheel:hover {
+            filter: brightness(1.1) drop-shadow(0 0 20px rgba(255, 120, 0, 0.6));
+        }
+
+        .pointer {
+            position: absolute;
+            right: -22px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 18px solid transparent;
+            border-bottom: 18px solid transparent;
+            border-right: 36px solid #ff6a00;
+            filter: drop-shadow(0 0 10px rgba(255, 100, 0, 0.9));
+            z-index: 20;
+        }
+
+        .pointer::after {
+            content: '';
+            position: absolute;
+            right: -36px;
+            top: -10px;
+            width: 0;
+            height: 0;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            border-right: 20px solid rgba(255, 200, 100, 0.3);
+        }
+
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #fff 0%, #ffcc00 40%, #ff6a00 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 150, 0, 0.8), 0 0 40px rgba(255, 80, 0, 0.4);
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 3px solid #fff;
+            transition: transform 0.15s;
+        }
+
+        .wheel-center:active {
+            transform: translate(-50%, -50%) scale(0.92);
+        }
+
+        .wheel-center svg {
+            width: 22px;
+            height: 22px;
+            fill: #1a0a00;
+        }
+
+        .spin-btn {
+            margin-top: 32px;
+            padding: 14px 52px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 4px;
+            color: #0a0a0f;
+            background: linear-gradient(135deg, #ffcc00 0%, #ff6a00 100%);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            z-index: 10;
+            clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+            box-shadow: 0 4px 30px rgba(255, 120, 0, 0.5);
+            transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+        }
+
+        .spin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 40px rgba(255, 120, 0, 0.7);
+            filter: brightness(1.1);
+        }
+
+        .spin-btn:active {
+            transform: translateY(1px);
+        }
+
+        .spin-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Modal de resultado */
+        .result-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(6px);
+        }
+
+        .result-overlay.show {
+            display: flex;
+        }
+
+        .result-card {
+            background: linear-gradient(145deg, #161616, #1e1206);
+            border: 1px solid rgba(255, 120, 0, 0.4);
+            border-radius: 12px;
+            padding: 44px 56px;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(255, 80, 0, 0.3), 0 0 120px rgba(255, 80, 0, 0.1);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 90vw;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .result-label {
+            font-size: 0.8rem;
+            letter-spacing: 5px;
+            color: rgba(255, 200, 100, 0.6);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .result-emoji {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            animation: bounce 0.6s ease infinite alternate;
+        }
+
+        @keyframes bounce {
+            from {
+                transform: translateY(0);
+            }
+
+            to {
+                transform: translateY(-8px);
+            }
+        }
+
+        .result-city {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.4rem, 8vw, 4rem);
+            color: #fff;
+            letter-spacing: 3px;
+            text-shadow: 0 0 30px currentColor;
+            margin-bottom: 6px;
+        }
+
+        .result-sub {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            margin-bottom: 28px;
+        }
+
+        .close-btn {
+            padding: 10px 36px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 3px;
+            background: transparent;
+            border: 1px solid rgba(255, 120, 0, 0.5);
+            color: #ff9640;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 120, 0, 0.15);
+            color: #fff;
+        }
+
+        /* --- BOTÃO DE COMPARTILHAR --- */
+        .share-btn {
+            padding: 10px 36px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            background: #25d366;
+            border: none;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: filter 0.2s;
+            width: 100%;
+            box-shadow: 0 0 15px rgba(37, 211, 102, 0.4);
+        }
+
+        .share-btn:hover {
+            filter: brightness(1.1);
+        }
+
+        .confetti-piece {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            top: -10px;
+            animation: confettiFall linear forwards;
+            border-radius: 1px;
+            pointer-events: none;
+            z-index: 200;
+        }
+
+        @keyframes confettiFall {
+            to {
+                transform: translateY(110vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="index.html" class="back-btn">⬅️ MENU</a>
+
+    <div class="title-wrap">
+        <h1>ROLETA DE <span>MAPAS</span></h1>
+        <p>Qual será seu destino no campo de batalha?</p>
+    </div>
+
+    <div class="wheel-container">
+        <div class="wheel-outer-ring"></div>
+        <div class="wheel-outer-mask"></div>
+        <div class="wheel-glow"></div> <canvas id="wheel"></canvas>
+        <div class="pointer"></div>
+        <div class="wheel-center" onclick="spin()">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+            </svg>
+        </div>
+    </div>
+
+    <button class="spin-btn" id="spinBtn" onclick="spin()">GIRAR ROLETA</button>
+
+    <div class="result-overlay" id="resultOverlay">
+        <div class="result-card" id="resultCard">
+            <div class="result-label">🗺️ Você vai jogar em</div>
+            <div class="result-emoji" id="resultEmoji">🔥</div>
+            <div class="result-city" id="resultCity">—</div>
+            <div class="result-sub">BOA SORTE, SOLDADO!</div>
+
+            <button class="share-btn" onclick="shareResult()">COMPARTILHAR NO WHATSAPP 📱</button>
+            <button class="close-btn" onclick="closeResult()">JOGAR NOVAMENTE</button>
+        </div>
+    </div>
+
+    <audio id="tickSound" src="https://actions.google.com/sounds/v1/ui/pop_click.ogg" preload="auto"></audio>
+    <audio id="winSound" src="assets/musica-lobby/ComeceOsJogos.mp3"></audio>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        const cities = [
+            { name: "Riverside", color: "#f5c842", textColor: "#fff" },
+            { name: "Plantation", color: "#7b3fa0", textColor: "#fff" },
+            { name: "Bullseye", color: "#2ecc40", textColor: "#fff" },
+            { name: "Rim Nam", color: "#e07020", textColor: "#fff" },
+            { name: "Kota Tua", color: "#d62828", textColor: "#fff" },
+            { name: "Katulistiwa", color: "#3a9ad9", textColor: "#fff" },
+            { name: "Factory", color: "#d0d0d8", textColor: "#fff" },
+        ];
+
+        const emojis = {
+            "Riverside": "🌊", "Plantation": "🌿", "Bullseye": "🎯",
+            "Rim Nam": "🏯", "Kota Tua": "🏛️", "Katulistiwa": "⚡", "Factory": "🏭",
+        };
+
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const NUM = cities.length;
+        const ARC = (2 * Math.PI) / NUM;
+        const tickAudio = document.getElementById('tickSound');
+        const winAudio = document.getElementById('winSound');
+
+        let currentAngle = 0;
+        let spinning = false;
+        let wheelSize = 0;
+
+        function playTick() {
+            tickAudio.currentTime = 0;
+            tickAudio.volume = 0.5;
+            tickAudio.play().catch(e => { });
+        }
+
+        function setSize() {
+            wheelSize = Math.min(380, window.innerWidth * 0.88);
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = wheelSize * dpr;
+            canvas.height = wheelSize * dpr;
+            canvas.style.width = wheelSize + 'px';
+            canvas.style.height = wheelSize + 'px';
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.scale(dpr, dpr);
+        }
+
+        function drawWheel(angle) {
+            const cx = wheelSize / 2;
+            const cy = wheelSize / 2;
+            const r = cx - 2;
+
+            ctx.clearRect(0, 0, wheelSize, wheelSize);
+
+            for (let i = 0; i < NUM; i++) {
+                const start = angle + i * ARC;
+                const end = start + ARC;
+                const city = cities[i];
+
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, r, start, end);
+                ctx.closePath();
+                ctx.fillStyle = city.color;
+                ctx.fill();
+
+                ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                const grad = ctx.createRadialGradient(cx, cy, r * 0.2, cx, cy, r);
+                grad.addColorStop(0, 'rgba(255,255,255,0.18)');
+                grad.addColorStop(1, 'rgba(0,0,0,0.12)');
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, r, start, end);
+                ctx.closePath();
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(start + ARC / 2);
+                ctx.textAlign = 'right';
+
+                const name = city.name;
+                const isLong = name.length > 10;
+
+                ctx.font = `bold ${isLong ? Math.floor(r * 0.11) : Math.floor(r * 0.13)}px 'Bebas Neue', sans-serif`;
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
+                ctx.fillStyle = city.textColor;
+                ctx.shadowColor = 'rgba(0,0,0,0.8)';
+                ctx.shadowBlur = 6;
+
+                if (isLong && name.includes(' ')) {
+                    const parts = name.split(' ');
+                    const half = Math.ceil(parts.length / 2);
+                    const line1 = parts.slice(0, half).join(' ');
+                    const line2 = parts.slice(half).join(' ');
+                    const lh = Math.floor(r * 0.1);
+                    ctx.strokeText(line1, r * 0.85, -lh * 0.4); ctx.fillText(line1, r * 0.85, -lh * 0.4);
+                    ctx.strokeText(line2, r * 0.85, lh * 0.7); ctx.fillText(line2, r * 0.85, lh * 0.7);
+                } else {
+                    ctx.strokeText(name, r * 0.85, Math.floor(r * 0.04)); ctx.fillText(name, r * 0.85, Math.floor(r * 0.04));
+                }
+                ctx.restore();
+            }
+
+            ctx.beginPath(); ctx.arc(cx, cy, 28, 0, 2 * Math.PI); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = '#ff6a00'; ctx.lineWidth = 3; ctx.stroke();
+        }
+
+        function easeOut(t) { return 1 - Math.pow(1 - t, 5); }
+
+        function spin() {
+            if (spinning) return;
+            spinning = true;
+            document.getElementById('spinBtn').disabled = true;
+
+            let lastSlice = Math.floor(Math.abs(currentAngle) / ARC);
+
+            const winner = Math.floor(Math.random() * NUM);
+            const extraSpins = 12 + Math.floor(Math.random() * 6);
+            const targetAngle = -(winner * ARC + ARC / 2) + Math.random() * (ARC * 0.6) - ARC * 0.3;
+            const visualCurrent = currentAngle % (2 * Math.PI);
+            let diff = (targetAngle - visualCurrent) % (2 * Math.PI);
+            if (diff <= 0) { diff += 2 * Math.PI; }
+
+            const totalRotation = (extraSpins * 2 * Math.PI) + diff;
+            const duration = 7500 + Math.random() * 2000;
+            const startAngle = currentAngle;
+            const startTime = performance.now();
+
+            function frame(now) {
+                const elapsed = now - startTime;
+                const t = Math.min(elapsed / duration, 1);
+                const eased = easeOut(t);
+                currentAngle = startAngle + totalRotation * eased;
+
+                const currentSlice = Math.floor(Math.abs(currentAngle) / ARC);
+                if (currentSlice !== lastSlice) {
+                    playTick();
+                    lastSlice = currentSlice;
+                }
+
+                drawWheel(currentAngle);
+
+                if (t < 1) {
+                    requestAnimationFrame(frame);
+                } else {
+                    currentAngle = startAngle + totalRotation;
+                    drawWheel(currentAngle);
+                    spinning = false;
+                    document.getElementById('spinBtn').disabled = false;
+
+                    // Toca a frase de vitória!
+                    winAudio.currentTime = 0;
+                    winAudio.play().catch(e => { });
+
+                    setTimeout(() => showResult(winner), 500);
+                }
+            }
+            requestAnimationFrame(frame);
+        }
+
+        function showResult(idx) {
+            const city = cities[idx];
+            document.getElementById('resultCity').textContent = city.name;
+            document.getElementById('resultCity').style.color = city.color;
+            document.getElementById('resultCity').style.textShadow = `0 0 30px ${city.color}, 0 0 60px ${city.color}`;
+            document.getElementById('resultEmoji').textContent = emojis[city.name] || '🔥';
+            document.getElementById('resultOverlay').classList.add('show');
+            launchConfetti(city.color);
+        }
+
+        // --- FUNÇÃO PARA COMPARTILHAR NO WHATSAPP ---
+        function shareResult() {
+            const name = document.getElementById('resultCity').textContent;
+            const text = `🗺️ Vou cair em *${name}* no Free Fire! Gira a roleta e vê o teu destino também: ${window.location.href}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        function closeResult() { document.getElementById('resultOverlay').classList.remove('show'); }
+        document.getElementById('resultOverlay').addEventListener('click', function (e) { if (e.target === this) closeResult(); });
+
+        function launchConfetti(color) {
+            const colors = [color, '#ff6a00', '#ffcc00', '#fff', '#ff4444'];
+            for (let i = 0; i < 60; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.style.left = Math.random() * 100 + 'vw';
+                piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+                piece.style.animationDelay = Math.random() * 0.8 + 's';
+                piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+                piece.style.width = (5 + Math.random() * 8) + 'px';
+                piece.style.height = (5 + Math.random() * 8) + 'px';
+                document.body.appendChild(piece);
+                piece.addEventListener('animationend', () => piece.remove());
+            }
+        }
+
+        function createParticles() {
+            for (let i = 0; i < 20; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = Math.random() * 100 + 'vw';
+                p.style.animationDuration = (8 + Math.random() * 12) + 's';
+                p.style.animationDelay = (Math.random() * 10) + 's';
+                p.style.width = p.style.height = (1 + Math.random() * 3) + 'px';
+                p.style.background = `rgba(255,${100 + Math.floor(Math.random() * 100)},0,0.5)`;
+                document.body.appendChild(p);
+            }
+        }
+
+        window.addEventListener('resize', () => { setSize(); drawWheel(currentAngle); });
+        setSize();
+        drawWheel(currentAngle);
+        createParticles();
+    </script>
+</body>
+
+</html>
