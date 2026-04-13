@@ -18,7 +18,9 @@
             -webkit-user-select: none;
             margin: 0;
             padding: 0;
+            /* Correção para o teclado do celular: usa altura dinâmica */
             height: 100vh;
+            height: 100dvh; 
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -63,7 +65,7 @@
 
     <div id="app-container" class="flex flex-col h-full w-full max-w-4xl mx-auto border-x border-gray-900 relative transition-all duration-300">
         
-        <header class="bg-[#0a0a0a] border-b border-gray-800 p-3 flex justify-between items-start z-10">
+        <header class="bg-[#0a0a0a] border-b border-gray-800 p-3 flex justify-between items-start z-10 shrink-0">
             <div>
                 <h1 class="text-sm text-gray-500 font-bold tracking-wider">SYSTEM DIAGNOSTICS v2.4.1</h1>
                 <div id="status-indicator" class="text-[11px] text-gray-600 mt-1">
@@ -75,17 +77,17 @@
             </button>
         </header>
 
-        <main id="messages-container" class="flex-1 overflow-y-auto p-4 bg-black scroll-smooth">
+        <main id="messages-container" class="flex-1 overflow-y-auto p-4 pb-10 bg-black scroll-smooth">
             <div class="log-line text-gray-600">Carregando módulos do kernel... OK</div>
             <div class="log-line text-gray-600">Iniciando escuta de pacotes criptografados... OK</div>
-            </main>
+        </main>
 
-        <div id="typing-bubble" class="hidden text-[11px] text-gray-600 px-4 py-1 bg-black border-t border-gray-900">
+        <div id="typing-bubble" class="hidden text-[11px] text-gray-600 px-4 py-1 bg-black border-t border-gray-900 shrink-0">
             > Recebendo stream de dados...
         </div>
 
-        <footer class="bg-black border-t border-gray-800 w-full">
-            <form id="chat-form" class="flex items-center w-full p-2">
+        <footer class="bg-black border-t border-gray-800 w-full shrink-0">
+            <form id="chat-form" class="flex items-center w-full p-3">
                 <span class="text-green-500 text-sm mr-2 ml-2">root@sys:~#</span>
                 <input type="text" id="message-input" autocomplete="off" spellcheck="false"
                     class="flex-1 bg-black text-gray-300 py-1 text-sm font-mono border-none focus:ring-0">
@@ -124,7 +126,6 @@
         
         if (!roomId) {
             roomId = "NET_" + Math.random().toString(16).substring(2, 10);
-            // Garante que o ID fique na URL para poder copiar
             window.history.replaceState({}, '', `?room=${roomId}`);
         }
 
@@ -140,12 +141,20 @@
         const typingBubble = document.getElementById('typing-bubble');
         const copyBtn = document.getElementById('copy-link-btn');
 
-        // Foco automático no input ao clicar na tela preta (para ser mais rápido)
-        document.body.addEventListener('click', () => {
-            messageInput.focus();
+        // Correção para o teclado: rola a tela para baixo quando a tela muda de tamanho
+        window.addEventListener('resize', scrollToBottom);
+        messageInput.addEventListener('focus', () => {
+            setTimeout(scrollToBottom, 300);
         });
 
-        // Anti-Cópia / Print / Teclas (Mais seguro)
+        // Foco automático no input ao clicar na tela preta
+        document.body.addEventListener('click', (e) => {
+            if(e.target.id !== 'copy-link-btn') {
+                messageInput.focus();
+            }
+        });
+
+        // Anti-Cópia / Print / Teclas
         document.addEventListener('contextmenu', e => e.preventDefault());
         window.addEventListener('keydown', (e) => {
             if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && e.key === 'U')) {
@@ -162,24 +171,20 @@
             }
         });
 
-        // Blur de Inatividade (Tela "apaga" mas não mostra aviso grande)
+        // Blur de Inatividade
         window.addEventListener('blur', () => appContainer.classList.add('blur-active'));
         window.addEventListener('focus', () => appContainer.classList.remove('blur-active'));
 
         // Copiar Link 
         copyBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Evita dar foco no input ao clicar no botão
-            
-            // Pega o link atual (que agora tem certeza que tem o ?room=)
+            e.stopPropagation(); 
             const currentUrl = window.location.href;
             navigator.clipboard.writeText(currentUrl);
-            
             copyBtn.innerText = "[ DADOS EXPORTADOS ]";
-            copyBtn.style.color = "#4ade80"; // Verde
-            
+            copyBtn.style.color = "#4ade80"; 
             setTimeout(() => {
                 copyBtn.innerText = "[ EXPORTAR DADOS ]";
-                copyBtn.style.color = ""; // Volta ao normal
+                copyBtn.style.color = ""; 
             }, 2000);
         });
 
@@ -209,6 +214,7 @@
                         if (data.typing && data.typing !== myUserId) {
                             statusIndicator.innerText = "[STATUS] Sincronização ativa. Recebendo...";
                             typingBubble.classList.remove('hidden');
+                            scrollToBottom();
                         } else {
                             statusIndicator.innerText = "[STATUS] Conexão remota estabelecida. (Criptografada)";
                             typingBubble.classList.add('hidden');
@@ -222,7 +228,6 @@
                 // Escuta Mensagens
                 const q = query(messagesRef, orderBy("timestamp", "asc"));
                 onSnapshot(q, (snapshot) => {
-                    // Mantém os logs iniciais e apaga o resto para re-renderizar
                     const initialLogs = `<div class="log-line text-gray-600">Carregando módulos do kernel... OK</div><div class="log-line text-gray-600">Iniciando escuta de pacotes criptografados... OK</div>`;
                     messagesContainer.innerHTML = initialLogs; 
                     
@@ -231,8 +236,8 @@
                         const now = new Date().getTime();
                         const msgTime = msgData.timestamp ? msgData.timestamp.toMillis() : now;
                         
-                        // Exclui mensagens com mais de 5 minutos (300.000 ms)
-                        if (now - msgTime > 300000) { 
+                        // CORREÇÃO DO TEMPO: Agora expira em 10 minutos (600.000 milissegundos)
+                        if (now - msgTime > 600000) { 
                             deleteDoc(docSnap.ref);
                             return;
                         }
@@ -246,17 +251,16 @@
                             decryptedText = "ERR_DECRYPT_FAIL_CORRUPTED_PACKET";
                         }
 
-                        // Formata a hora
                         const dateObj = msgData.timestamp ? msgData.timestamp.toDate() : new Date();
                         const timeString = dateObj.toLocaleTimeString('pt-BR');
 
                         renderMessage(timeString, decryptedText, msgData.senderId === myUserId);
 
-                        // Auto-Destruição Visual após leitura (apaga do banco depois de 1.5s se você recebeu)
+                        // Auto-Destruição Visual após leitura: alterado para 10 minutos
                         if (msgData.senderId !== myUserId) {
                             setTimeout(() => {
                                 deleteDoc(docSnap.ref);
-                            }, 1500); 
+                            }, 600000); // 10 minutos
                         }
                     });
                     scrollToBottom();
@@ -267,7 +271,6 @@
             }
         }
 
-        // Renderizar Mensagem no formato de Log
         function renderMessage(timeString, text, isMine) {
             const div = document.createElement('div');
             div.className = "log-line";
@@ -287,15 +290,14 @@
             }, 50);
         }
 
-        // Envio do formulário
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const text = messageInput.value.trim();
             if (!text) return;
 
             const encryptedText = CryptoJS.AES.encrypt(text, roomId).toString();
-            messageInput.value = ''; // Limpa o input
-            messageInput.focus();    // Mantém o cursor piscando
+            messageInput.value = ''; 
+            messageInput.focus();    
             await updateDoc(roomRef, { typing: null });
 
             await addDoc(messagesRef, {
@@ -306,7 +308,6 @@
             scrollToBottom();
         });
 
-        // Digitação
         let typingTimeout;
         messageInput.addEventListener('input', () => {
             updateDoc(roomRef, { typing: myUserId });
@@ -314,7 +315,6 @@
             typingTimeout = setTimeout(() => updateDoc(roomRef, { typing: null }), 1000);
         });
 
-        // Foco inicial
         messageInput.focus();
         initRoom();
     </script>
