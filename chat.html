@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>System Diagnostics Monitor</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <style>
+        /* Cores e estilos nativos para NUNCA quebrar como no print */
+        body { 
+            background-color: #000000; 
+            color: #d1d5db; /* Cinza claro padrão */
+            font-family: 'Courier New', Courier, monospace; /* Fonte padrão de todo computador/celular */
+            user-select: none; 
+            -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Barra de rolagem invisível para ser mais discreto */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; }
+
+        /* Ocultar elementos de segurança */
+        .secure-overlay { display: none; }
+        .secure-overlay.active { display: flex; }
+
+        /* Input do terminal sem bordas */
+        input:focus { outline: none; }
+        
+        /* Blur discreto: apenas escurece a tela levemente */
+        .blur-active { 
+            opacity: 0.2; 
+            transition: opacity 0.5s; 
+            pointer-events: none; 
+        }
+
+        /* Estilos das linhas de log (mensagens) */
+        .log-line { margin-bottom: 6px; font-size: 13px; line-height: 1.4; word-break: break-all; }
+        .log-time { color: #6b7280; } /* Cinza escuro */
+        .log-local { color: #4ade80; } /* Verde para você */
+        .log-remote { color: #60a5fa; } /* Azul para o outro */
+    </style>
+</head>
+<body>
+
+    <div id="prtscr-overlay" class="secure-overlay absolute inset-0 bg-black z-50 items-center justify-center flex-col">
+        <p style="color: red; font-size: 14px;">[FATAL ERROR] BUFFER OVERFLOW AT 0x0000FF.</p>
+        <p style="color: gray; font-size: 12px;">SYSTEM HALTED.</p>
+    </div>
+
+    <div id="full-overlay" class="secure-overlay absolute inset-0 bg-black z-50 items-center justify-center">
+        <p style="color: orange; font-size: 14px;">[WARN] SOCKET LIMIT REACHED (2/2). CONNECTION REFUSED.</p>
+    </div>
+
+    <div id="app-container" class="flex flex-col h-full w-full max-w-4xl mx-auto border-x border-gray-900 relative transition-all duration-300">
+        
+        <header class="bg-[#0a0a0a] border-b border-gray-800 p-3 flex justify-between items-start z-10">
+            <div>
+                <h1 class="text-sm text-gray-500 font-bold tracking-wider">SYSTEM DIAGNOSTICS v2.4.1</h1>
+                <div id="status-indicator" class="text-[11px] text-gray-600 mt-1">
+                    [STATUS] Aguardando handshake TCP...
+                </div>
+            </div>
+            <button id="copy-link-btn" class="text-[11px] text-gray-500 hover:text-white border border-gray-700 px-2 py-1 bg-black">
+                [ EXPORTAR DADOS ]
+            </button>
+        </header>
+
+        <main id="messages-container" class="flex-1 overflow-y-auto p-4 bg-black scroll-smooth">
+            <div class="log-line text-gray-600">Carregando módulos do kernel... OK</div>
+            <div class="log-line text-gray-600">Iniciando escuta de pacotes criptografados... OK</div>
+            </main>
+
+        <div id="typing-bubble" class="hidden text-[11px] text-gray-600 px-4 py-1 bg-black border-t border-gray-900">
+            > Recebendo stream de dados...
+        </div>
+
+        <footer class="bg-black border-t border-gray-800 w-full">
+            <form id="chat-form" class="flex items-center w-full p-2">
+                <span class="text-green-500 text-sm mr-2 ml-2">root@sys:~#</span>
+                <input type="text" id="message-input" autocomplete="off" spellcheck="false"
+                    class="flex-1 bg-black text-gray-300 py-1 text-sm font-mono border-none focus:ring-0">
+                <button type="submit" class="hidden"></button>
+            </form>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, onSnapshot, addDoc, deleteDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // CREDENCIAIS FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyDWXtdoYRTfJJA1zeOXAeN9S1-1B2OB5zc",
+            authDomain: "chat-c6543.firebaseapp.com",
+            projectId: "chat-c6543",
+            storageBucket: "chat-c6543.firebasestorage.app",
+            messagingSenderId: "477564400024",
+            appId: "1:477564400024:web:d08349e3dec77ca5e37bed"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // ID do Usuário (Disfarçado de ID de sessão)
+        let myUserId = localStorage.getItem('sys_session_id');
+        if (!myUserId) {
+            myUserId = "UID_" + Math.random().toString(16).substring(2, 10);
+            localStorage.setItem('sys_session_id', myUserId);
+        }
+
+        // ID da Sala (Extraído da URL de forma segura)
+        const urlParams = new URLSearchParams(window.location.search);
+        let roomId = urlParams.get('room');
+        
+        if (!roomId) {
+            roomId = "NET_" + Math.random().toString(16).substring(2, 10);
+            // Garante que o ID fique na URL para poder copiar
+            window.history.replaceState({}, '', `?room=${roomId}`);
+        }
+
+        const roomRef = doc(db, "rooms", roomId);
+        const messagesRef = collection(roomRef, "messages");
+
+        // Elementos UI
+        const messagesContainer = document.getElementById('messages-container');
+        const messageInput = document.getElementById('message-input');
+        const chatForm = document.getElementById('chat-form');
+        const statusIndicator = document.getElementById('status-indicator');
+        const appContainer = document.getElementById('app-container');
+        const typingBubble = document.getElementById('typing-bubble');
+        const copyBtn = document.getElementById('copy-link-btn');
+
+        // Foco automático no input ao clicar na tela preta (para ser mais rápido)
+        document.body.addEventListener('click', () => {
+            messageInput.focus();
+        });
+
+        // Anti-Cópia / Print / Teclas (Mais seguro)
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && e.key === 'U')) {
+                e.preventDefault();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'PrintScreen') {
+                const overlay = document.getElementById('prtscr-overlay');
+                overlay.classList.add('active'); 
+                navigator.clipboard.writeText('ERR_MEMORY_DUMP'); 
+                setTimeout(() => overlay.classList.remove('active'), 2000);
+            }
+        });
+
+        // Blur de Inatividade (Tela "apaga" mas não mostra aviso grande)
+        window.addEventListener('blur', () => appContainer.classList.add('blur-active'));
+        window.addEventListener('focus', () => appContainer.classList.remove('blur-active'));
+
+        // Copiar Link 
+        copyBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Evita dar foco no input ao clicar no botão
+            
+            // Pega o link atual (que agora tem certeza que tem o ?room=)
+            const currentUrl = window.location.href;
+            navigator.clipboard.writeText(currentUrl);
+            
+            copyBtn.innerText = "[ DADOS EXPORTADOS ]";
+            copyBtn.style.color = "#4ade80"; // Verde
+            
+            setTimeout(() => {
+                copyBtn.innerText = "[ EXPORTAR DADOS ]";
+                copyBtn.style.color = ""; // Volta ao normal
+            }, 2000);
+        });
+
+        // Inicializar Sala
+        async function initRoom() {
+            try {
+                const roomSnap = await getDoc(roomRef);
+                
+                if (!roomSnap.exists()) {
+                    await setDoc(roomRef, { users: [myUserId], typing: null });
+                } else {
+                    const data = roomSnap.data();
+                    if (!data.users.includes(myUserId)) {
+                        if (data.users.length >= 2) {
+                            document.getElementById('full-overlay').classList.add('active');
+                            return;
+                        } else {
+                            await updateDoc(roomRef, { users: [...data.users, myUserId] });
+                        }
+                    }
+                }
+
+                // Escuta status
+                onSnapshot(roomRef, (docSnap) => {
+                    const data = docSnap.data();
+                    if (data && data.users.length === 2) {
+                        if (data.typing && data.typing !== myUserId) {
+                            statusIndicator.innerText = "[STATUS] Sincronização ativa. Recebendo...";
+                            typingBubble.classList.remove('hidden');
+                        } else {
+                            statusIndicator.innerText = "[STATUS] Conexão remota estabelecida. (Criptografada)";
+                            typingBubble.classList.add('hidden');
+                        }
+                    } else {
+                        statusIndicator.innerText = "[STATUS] Aguardando handshake de terminal remoto...";
+                        typingBubble.classList.add('hidden');
+                    }
+                });
+
+                // Escuta Mensagens
+                const q = query(messagesRef, orderBy("timestamp", "asc"));
+                onSnapshot(q, (snapshot) => {
+                    // Mantém os logs iniciais e apaga o resto para re-renderizar
+                    const initialLogs = `<div class="log-line text-gray-600">Carregando módulos do kernel... OK</div><div class="log-line text-gray-600">Iniciando escuta de pacotes criptografados... OK</div>`;
+                    messagesContainer.innerHTML = initialLogs; 
+                    
+                    snapshot.forEach((docSnap) => {
+                        const msgData = docSnap.data();
+                        const now = new Date().getTime();
+                        const msgTime = msgData.timestamp ? msgData.timestamp.toMillis() : now;
+                        
+                        // Exclui mensagens com mais de 5 minutos (300.000 ms)
+                        if (now - msgTime > 300000) { 
+                            deleteDoc(docSnap.ref);
+                            return;
+                        }
+
+                        let decryptedText = "";
+                        try {
+                            const bytes = CryptoJS.AES.decrypt(msgData.text, roomId);
+                            decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+                            if (!decryptedText) throw new Error();
+                        } catch (e) {
+                            decryptedText = "ERR_DECRYPT_FAIL_CORRUPTED_PACKET";
+                        }
+
+                        // Formata a hora
+                        const dateObj = msgData.timestamp ? msgData.timestamp.toDate() : new Date();
+                        const timeString = dateObj.toLocaleTimeString('pt-BR');
+
+                        renderMessage(timeString, decryptedText, msgData.senderId === myUserId);
+
+                        // Auto-Destruição Visual após leitura (apaga do banco depois de 1.5s se você recebeu)
+                        if (msgData.senderId !== myUserId) {
+                            setTimeout(() => {
+                                deleteDoc(docSnap.ref);
+                            }, 1500); 
+                        }
+                    });
+                    scrollToBottom();
+                });
+            } catch (error) {
+                console.error("Erro de conexão:", error);
+                statusIndicator.innerText = "[ERRO] Falha ao conectar no banco de dados.";
+            }
+        }
+
+        // Renderizar Mensagem no formato de Log
+        function renderMessage(timeString, text, isMine) {
+            const div = document.createElement('div');
+            div.className = "log-line";
+            
+            const prefix = isMine 
+                ? `<span class="log-local">[LOCAL] sys_req:</span>` 
+                : `<span class="log-remote">[REMOTO] sys_res:</span>`;
+
+            div.innerHTML = `<span class="log-time">[${timeString}]</span> ${prefix} <span class="text-gray-300">${text}</span>`;
+            
+            messagesContainer.appendChild(div);
+        }
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 50);
+        }
+
+        // Envio do formulário
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = messageInput.value.trim();
+            if (!text) return;
+
+            const encryptedText = CryptoJS.AES.encrypt(text, roomId).toString();
+            messageInput.value = ''; // Limpa o input
+            messageInput.focus();    // Mantém o cursor piscando
+            await updateDoc(roomRef, { typing: null });
+
+            await addDoc(messagesRef, {
+                text: encryptedText,
+                senderId: myUserId,
+                timestamp: serverTimestamp()
+            });
+            scrollToBottom();
+        });
+
+        // Digitação
+        let typingTimeout;
+        messageInput.addEventListener('input', () => {
+            updateDoc(roomRef, { typing: myUserId });
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => updateDoc(roomRef, { typing: null }), 1000);
+        });
+
+        // Foco inicial
+        messageInput.focus();
+        initRoom();
+    </script>
+</body>
+</html>
