@@ -9,47 +9,44 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
     <style>
-        /* Cores e estilos nativos para NUNCA quebrar como no print */
         body { 
             background-color: #000000; 
-            color: #d1d5db; /* Cinza claro padrão */
-            font-family: 'Courier New', Courier, monospace; /* Fonte padrão de todo computador/celular */
+            color: #d1d5db; 
+            font-family: 'Courier New', Courier, monospace; 
             user-select: none; 
             -webkit-user-select: none;
             margin: 0;
             padding: 0;
-            /* Correção para o teclado do celular: usa altura dinâmica */
-            height: 100vh;
-            height: 100dvh; 
+            height: 100dvh; /* Altura dinâmica rigorosa para respeitar o teclado */
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
 
-        /* Barra de rolagem invisível para ser mais discreto */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #333; }
+        ::-webkit-scrollbar-thumb { background: #1a1a1a; }
 
-        /* Ocultar elementos de segurança */
         .secure-overlay { display: none; }
         .secure-overlay.active { display: flex; }
 
-        /* Input do terminal sem bordas */
         input:focus { outline: none; }
         
-        /* Blur discreto: apenas escurece a tela levemente */
         .blur-active { 
-            opacity: 0.2; 
+            opacity: 0.15; 
             transition: opacity 0.5s; 
             pointer-events: none; 
         }
 
-        /* Estilos das linhas de log (mensagens) */
-        .log-line { margin-bottom: 6px; font-size: 13px; line-height: 1.4; word-break: break-all; }
-        .log-time { color: #6b7280; } /* Cinza escuro */
-        .log-local { color: #4ade80; } /* Verde para você */
-        .log-remote { color: #60a5fa; } /* Azul para o outro */
+        .log-line { margin-bottom: 4px; font-size: 13px; line-height: 1.3; word-break: break-all; }
+        .log-time { color: #4b5563; font-size: 11px; } 
+        .log-local { color: #22c55e; } 
+        .log-remote { color: #3b82f6; } 
+        
+        /* Cor da mensagem real (camuflada para não chamar atenção de longe) */
+        .msg-text { color: #9ca3af; font-weight: bold; }
+        /* Lixo visual para confundir espiões */
+        .sys-garbage { color: #374151; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -63,34 +60,36 @@
         <p style="color: orange; font-size: 14px;">[WARN] SOCKET LIMIT REACHED (2/2). CONNECTION REFUSED.</p>
     </div>
 
-    <div id="app-container" class="flex flex-col h-full w-full max-w-4xl mx-auto border-x border-gray-900 relative transition-all duration-300">
+    <div id="app-container" class="flex flex-col h-full w-full max-w-4xl mx-auto relative transition-all duration-300">
         
-        <header class="bg-[#0a0a0a] border-b border-gray-800 p-3 flex justify-between items-start z-10 shrink-0">
+        <header class="bg-[#050505] border-b border-gray-900 p-2 flex justify-between items-start z-10 shrink-0">
             <div>
-                <h1 class="text-sm text-gray-500 font-bold tracking-wider">SYSTEM DIAGNOSTICS v2.4.1</h1>
-                <div id="status-indicator" class="text-[11px] text-gray-600 mt-1">
-                    [STATUS] Aguardando handshake TCP...
+                <h1 class="text-xs text-gray-600 font-bold tracking-wider">SYS.DIAG_v2.4</h1>
+                <div id="status-indicator" class="text-[10px] text-gray-700 mt-1">
+                    [STATUS] Aguardando handshake...
                 </div>
             </div>
-            <button id="copy-link-btn" class="text-[11px] text-gray-500 hover:text-white border border-gray-700 px-2 py-1 bg-black">
-                [ EXPORTAR DADOS ]
+            <button id="copy-link-btn" class="text-[10px] text-gray-600 hover:text-white border border-gray-800 px-2 py-1 bg-black">
+                [ EXPORTAR ]
             </button>
         </header>
 
-        <main id="messages-container" class="flex-1 overflow-y-auto p-4 pb-10 bg-black scroll-smooth">
-            <div class="log-line text-gray-600">Carregando módulos do kernel... OK</div>
-            <div class="log-line text-gray-600">Iniciando escuta de pacotes criptografados... OK</div>
+        <main id="messages-container" class="flex-1 overflow-y-auto p-3 bg-black scroll-smooth flex flex-col">
+            <div class="flex-1"></div> 
+            
+            <div id="logs-wrapper" class="flex flex-col gap-1 w-full pb-2">
+                </div>
         </main>
 
-        <div id="typing-bubble" class="hidden text-[11px] text-gray-600 px-4 py-1 bg-black border-t border-gray-900 shrink-0">
-            > Recebendo stream de dados...
+        <div id="typing-bubble" class="hidden text-[10px] text-gray-700 px-3 py-1 bg-[#050505] border-t border-gray-900 shrink-0">
+            > streaming_data...
         </div>
 
-        <footer class="bg-black border-t border-gray-800 w-full shrink-0">
-            <form id="chat-form" class="flex items-center w-full p-3">
-                <span class="text-green-500 text-sm mr-2 ml-2">root@sys:~#</span>
+        <footer class="bg-black border-t border-gray-900 w-full shrink-0 pb-1">
+            <form id="chat-form" class="flex items-center w-full p-2">
+                <span class="text-green-600 text-xs mr-2 ml-1">root:~#</span>
                 <input type="text" id="message-input" autocomplete="off" spellcheck="false"
-                    class="flex-1 bg-black text-gray-300 py-1 text-sm font-mono border-none focus:ring-0">
+                    class="flex-1 bg-black text-gray-400 py-1 text-sm font-mono border-none focus:ring-0">
                 <button type="submit" class="hidden"></button>
             </form>
         </footer>
@@ -113,14 +112,12 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // ID do Usuário (Disfarçado de ID de sessão)
         let myUserId = localStorage.getItem('sys_session_id');
         if (!myUserId) {
             myUserId = "UID_" + Math.random().toString(16).substring(2, 10);
             localStorage.setItem('sys_session_id', myUserId);
         }
 
-        // ID da Sala (Extraído da URL de forma segura)
         const urlParams = new URLSearchParams(window.location.search);
         let roomId = urlParams.get('room');
         
@@ -132,8 +129,8 @@
         const roomRef = doc(db, "rooms", roomId);
         const messagesRef = collection(roomRef, "messages");
 
-        // Elementos UI
         const messagesContainer = document.getElementById('messages-container');
+        const logsWrapper = document.getElementById('logs-wrapper');
         const messageInput = document.getElementById('message-input');
         const chatForm = document.getElementById('chat-form');
         const statusIndicator = document.getElementById('status-indicator');
@@ -141,20 +138,17 @@
         const typingBubble = document.getElementById('typing-bubble');
         const copyBtn = document.getElementById('copy-link-btn');
 
-        // Correção para o teclado: rola a tela para baixo quando a tela muda de tamanho
         window.addEventListener('resize', scrollToBottom);
         messageInput.addEventListener('focus', () => {
             setTimeout(scrollToBottom, 300);
         });
 
-        // Foco automático no input ao clicar na tela preta
         document.body.addEventListener('click', (e) => {
             if(e.target.id !== 'copy-link-btn') {
                 messageInput.focus();
             }
         });
 
-        // Anti-Cópia / Print / Teclas
         document.addEventListener('contextmenu', e => e.preventDefault());
         window.addEventListener('keydown', (e) => {
             if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && e.key === 'U')) {
@@ -171,24 +165,21 @@
             }
         });
 
-        // Blur de Inatividade
         window.addEventListener('blur', () => appContainer.classList.add('blur-active'));
         window.addEventListener('focus', () => appContainer.classList.remove('blur-active'));
 
-        // Copiar Link 
         copyBtn.addEventListener('click', (e) => {
             e.stopPropagation(); 
             const currentUrl = window.location.href;
             navigator.clipboard.writeText(currentUrl);
-            copyBtn.innerText = "[ DADOS EXPORTADOS ]";
-            copyBtn.style.color = "#4ade80"; 
+            copyBtn.innerText = "[ COPIADO ]";
+            copyBtn.style.color = "#22c55e"; 
             setTimeout(() => {
-                copyBtn.innerText = "[ EXPORTAR DADOS ]";
+                copyBtn.innerText = "[ EXPORTAR ]";
                 copyBtn.style.color = ""; 
             }, 2000);
         });
 
-        // Inicializar Sala
         async function initRoom() {
             try {
                 const roomSnap = await getDoc(roomRef);
@@ -207,36 +198,33 @@
                     }
                 }
 
-                // Escuta status
                 onSnapshot(roomRef, (docSnap) => {
                     const data = docSnap.data();
                     if (data && data.users.length === 2) {
                         if (data.typing && data.typing !== myUserId) {
-                            statusIndicator.innerText = "[STATUS] Sincronização ativa. Recebendo...";
+                            statusIndicator.innerText = "[STATUS] sync_active: recebendo pacotes...";
                             typingBubble.classList.remove('hidden');
                             scrollToBottom();
                         } else {
-                            statusIndicator.innerText = "[STATUS] Conexão remota estabelecida. (Criptografada)";
+                            statusIndicator.innerText = "[STATUS] tcp_connected: criptografia ligada.";
                             typingBubble.classList.add('hidden');
                         }
                     } else {
-                        statusIndicator.innerText = "[STATUS] Aguardando handshake de terminal remoto...";
+                        statusIndicator.innerText = "[STATUS] awaiting_host...";
                         typingBubble.classList.add('hidden');
                     }
                 });
 
-                // Escuta Mensagens
                 const q = query(messagesRef, orderBy("timestamp", "asc"));
                 onSnapshot(q, (snapshot) => {
-                    const initialLogs = `<div class="log-line text-gray-600">Carregando módulos do kernel... OK</div><div class="log-line text-gray-600">Iniciando escuta de pacotes criptografados... OK</div>`;
-                    messagesContainer.innerHTML = initialLogs; 
+                    const initialLogs = `<div class="log-line sys-garbage">SYS_INIT: carregar módulos kernel... 0x00 OK</div><div class="log-line sys-garbage">SEC_PROTOCOL: porta aberta escuta... 0x01 OK</div>`;
+                    logsWrapper.innerHTML = initialLogs; 
                     
                     snapshot.forEach((docSnap) => {
                         const msgData = docSnap.data();
                         const now = new Date().getTime();
                         const msgTime = msgData.timestamp ? msgData.timestamp.toMillis() : now;
                         
-                        // CORREÇÃO DO TEMPO: Agora expira em 10 minutos (600.000 milissegundos)
                         if (now - msgTime > 600000) { 
                             deleteDoc(docSnap.ref);
                             return;
@@ -248,7 +236,7 @@
                             decryptedText = bytes.toString(CryptoJS.enc.Utf8);
                             if (!decryptedText) throw new Error();
                         } catch (e) {
-                            decryptedText = "ERR_DECRYPT_FAIL_CORRUPTED_PACKET";
+                            decryptedText = "ERR_CORRUPT";
                         }
 
                         const dateObj = msgData.timestamp ? msgData.timestamp.toDate() : new Date();
@@ -256,32 +244,46 @@
 
                         renderMessage(timeString, decryptedText, msgData.senderId === myUserId);
 
-                        // Auto-Destruição Visual após leitura: alterado para 10 minutos
                         if (msgData.senderId !== myUserId) {
                             setTimeout(() => {
                                 deleteDoc(docSnap.ref);
-                            }, 600000); // 10 minutos
+                            }, 600000); 
                         }
                     });
                     scrollToBottom();
                 });
             } catch (error) {
                 console.error("Erro de conexão:", error);
-                statusIndicator.innerText = "[ERRO] Falha ao conectar no banco de dados.";
+                statusIndicator.innerText = "[ERRO] falha_banco_dados";
             }
+        }
+
+        // Função geradora de strings aleatórias para a camuflagem
+        function getFakeHex() {
+            return Math.random().toString(16).substring(2, 6).toUpperCase();
         }
 
         function renderMessage(timeString, text, isMine) {
             const div = document.createElement('div');
-            div.className = "log-line";
+            div.className = "log-line flex items-start flex-wrap";
             
             const prefix = isMine 
-                ? `<span class="log-local">[LOCAL] sys_req:</span>` 
-                : `<span class="log-remote">[REMOTO] sys_res:</span>`;
+                ? `<span class="log-local mr-1">[LOC] req:</span>` 
+                : `<span class="log-remote mr-1">[REM] res:</span>`;
 
-            div.innerHTML = `<span class="log-time">[${timeString}]</span> ${prefix} <span class="text-gray-300">${text}</span>`;
+            // Adicionando a "camuflagem" em volta da mensagem
+            const fakeHexStart = `{0x${getFakeHex()}}`;
+            const fakeHexEnd = `->[0x${getFakeHex()}]`;
+
+            div.innerHTML = `
+                <span class="log-time mr-1">[${timeString}]</span> 
+                ${prefix} 
+                <span class="sys-garbage ml-1 mr-1">${fakeHexStart}</span> 
+                <span class="msg-text">${text}</span> 
+                <span class="sys-garbage ml-1">${fakeHexEnd}</span>
+            `;
             
-            messagesContainer.appendChild(div);
+            logsWrapper.appendChild(div);
         }
 
         function scrollToBottom() {
