@@ -78,7 +78,7 @@
             <div class="flex-1"></div> 
             
             <div id="logs-wrapper" class="flex flex-col gap-1 w-full pb-2">
-                </div>
+            </div>
         </main>
 
         <div id="typing-bubble" class="hidden text-[10px] text-gray-700 px-3 py-1 bg-[#050505] border-t border-gray-900 shrink-0">
@@ -96,10 +96,11 @@
     </div>
 
     <script type="module">
+        // Importando as funções do Firebase através dos links (CDN)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, onSnapshot, addDoc, deleteDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // CREDENCIAIS FIREBASE
+        // CREDENCIAIS FIREBASE 
         const firebaseConfig = {
             apiKey: "AIzaSyDWXtdoYRTfJJA1zeOXAeN9S1-1B2OB5zc",
             authDomain: "chat-c6543.firebaseapp.com",
@@ -109,6 +110,7 @@
             appId: "1:477564400024:web:d08349e3dec77ca5e37bed"
         };
 
+        // Inicializando o Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
@@ -258,7 +260,6 @@
             }
         }
 
-        // Função geradora de strings aleatórias para a camuflagem
         function getFakeHex() {
             return Math.random().toString(16).substring(2, 6).toUpperCase();
         }
@@ -271,7 +272,6 @@
                 ? `<span class="log-local mr-1">[LOC] req:</span>` 
                 : `<span class="log-remote mr-1">[REM] res:</span>`;
 
-            // Adicionando a "camuflagem" em volta da mensagem
             const fakeHexStart = `{0x${getFakeHex()}}`;
             const fakeHexEnd = `->[0x${getFakeHex()}]`;
 
